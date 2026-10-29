@@ -12,10 +12,15 @@ __pycache__/
 *.egg-info/
 
 # Local data and environment
-backend/data/
 .env
 .env.*
 !.env.example
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
 
 # Editors and OS
 .vscode/
