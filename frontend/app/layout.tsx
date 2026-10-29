@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bazaar | Discover something good",
-  description: "Browse the latest finds at Bazaar.",
+  title: {
+    default: "Bazaar | Find the good in everyday",
+    template: "%s | Bazaar",
+  },
+  description:
+    "Considered pieces, useful things, and small joys for the spaces and moments you call your own.",
 };
 
 export default function RootLayout({
