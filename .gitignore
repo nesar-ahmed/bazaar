@@ -1,0 +1,23 @@
+# Node.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Python
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Local data and environment
+backend/data/
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
