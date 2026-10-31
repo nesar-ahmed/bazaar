@@ -1,26 +1,18 @@
 import { NextResponse } from "next/server";
 
-import { ACCESS_TOKEN_COOKIE, getApiUrl } from "@/lib/auth";
-import { backendErrorMessage, isSameOriginRequest } from "@/lib/auth-response";
+import type { TokenPair, UserProfile } from "@/lib/api-types";
+import { getApiUrl } from "@/lib/auth";
+import {
+  backendErrorMessage,
+  backendFieldErrors,
+  isSameOriginRequest,
+} from "@/lib/auth-response";
+import { applySessionCookies } from "@/lib/session-cookies";
 
 type RegistrationInput = {
-  email: string;
-  full_name: string;
-  password: string;
-};
-
-type TokenResponse = {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-};
-
-type UserProfile = {
-  id: number;
-  email: string;
-  full_name: string;
-  is_active: boolean;
-  created_at: string;
+  email?: string;
+  full_name?: string;
+  password?: string;
 };
 
 export async function POST(request: Request) {
@@ -35,47 +27,56 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  const apiUrl = getApiUrl();
   try {
-    const apiUrl = getApiUrl();
     const registration = await fetch(`${apiUrl}/api/v1/users/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     if (!registration.ok) {
+      const fields = await backendFieldErrors(registration);
       return NextResponse.json(
-        { error: await backendErrorMessage(registration) },
+        {
+          error: await backendErrorMessage(registration),
+          fields,
+        },
         { status: registration.status >= 500 ? 503 : registration.status },
       );
     }
 
+    const user = (await registration.json()) as UserProfile;
+
+    // Sign the new account straight in, merging any guest bag it carried.
+    const cartToken = request.headers.get("x-cart-token");
     const login = await fetch(`${apiUrl}/api/v1/users/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(cartToken ? { "X-Cart-Token": cartToken } : {}),
+      },
       body: JSON.stringify({ email: input.email, password: input.password }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     if (!login.ok) {
       return NextResponse.json(
-        { error: "Your account was created, but sign-in failed. Please sign in." },
+        {
+          error: "Your account was created, but sign-in failed. Please sign in.",
+          created: true,
+        },
         { status: 502 },
       );
     }
 
-    const [user, token] = (await Promise.all([
-      registration.json(),
-      login.json(),
-    ])) as [UserProfile, TokenResponse];
-
-    const response = NextResponse.json({ user }, { status: 201 });
-    response.cookies.set(ACCESS_TOKEN_COOKIE, token.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: token.expires_in,
-    });
+    const tokens = (await login.json()) as TokenPair;
+    const response = NextResponse.json(
+      { user, role: user.role, cart_merge_warnings: tokens.cart_merge_warnings },
+      { status: 201 },
+    );
+    applySessionCookies(response, tokens, user.role);
     return response;
   } catch {
     return NextResponse.json(

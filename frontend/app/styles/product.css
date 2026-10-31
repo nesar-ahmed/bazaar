@@ -1,0 +1,120 @@
+/* ── Product detail page ──────────────────────────────────────────────────
+   Owns: .pdp* .stepper .buybar */
+
+.pdp {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(var(--s-5), 4vw, var(--s-8));
+  align-items: start;
+  padding-block: var(--s-5) var(--s-9);
+}
+.pdp__crumbs { grid-column: 1 / -1; }
+
+.pdp__media { position: sticky; top: calc(var(--header-h) + var(--s-4)); display: grid; gap: var(--s-3); }
+.pdp__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--sunk);
+}
+.pdp__frame img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-4) var(--ease-out); }
+@media (hover: hover) { .pdp__frame:hover img { transform: scale(1.06); } }
+.pdp__ref {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  inset-block-start: 0.75rem;
+  padding: 0.3125rem 0.5rem;
+  border-radius: var(--r-1);
+  background: oklch(0.18 0.02 255 / 68%);
+  color: var(--on-deep);
+  font: 500 var(--t-meta)/1.2 var(--font-mono);
+  letter-spacing: 0.06em;
+  backdrop-filter: blur(4px);
+}
+.pdp__caption { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); font-size: var(--t-meta); color: var(--muted); }
+
+.pdp__info { display: grid; gap: var(--s-5); align-content: start; padding-block: var(--s-2); }
+.pdp__title { font-size: var(--t-h1); letter-spacing: -0.035em; line-height: 1.02; }
+.pdp__lede { max-width: var(--measure); color: var(--ink-2); font-size: var(--t-body); line-height: 1.75; }
+.pdp__priceline { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s-3); padding-block: var(--s-4); border-block: 1px solid var(--rule); }
+.pdp__desc { display: grid; gap: var(--s-3); }
+.pdp__desc p { color: var(--ink-2); font-size: var(--t-body); line-height: var(--lh-body); max-width: var(--measure); }
+
+.pdp__buy { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+.pdp__buy-stack { display: grid; gap: var(--s-3); justify-items: start; }
+.pdp__buy-stack > .tiny { max-width: 42ch; }
+.pdp__specs { display: grid; gap: 0; border-block-start: 1px solid var(--rule); }
+.pdp__specs .kv__row { border-block-end: 1px solid var(--rule); }
+.pdp__specs dt { display: flex; align-items: center; gap: 0.5rem; }
+
+.pdp__accordion { border-block-start: 1px solid var(--rule); }
+.pdp__accordion:last-of-type { border-block-end: 1px solid var(--rule); }
+.pdp__accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 3rem;
+  cursor: pointer;
+  font-size: var(--t-ui);
+  font-weight: 600;
+  list-style: none;
+}
+.pdp__accordion summary::-webkit-details-marker { display: none; }
+.pdp__accordion summary svg { transition: transform var(--t-2) var(--ease-out); color: var(--muted); }
+.pdp__accordion[open] summary svg { transform: rotate(180deg); }
+.pdp__accordion > p { padding-block: 0 var(--s-4); max-width: var(--measure); color: var(--muted); font-size: var(--t-ui); line-height: 1.7; }
+
+.pdp__more { grid-column: 1 / -1; padding-block-start: var(--s-6); border-block-start: 1px solid var(--rule); }
+.pdp__more-head { display: flex; align-items: end; justify-content: space-between; gap: var(--s-4); margin-block-end: var(--s-5); }
+
+/* Thumb-zone buy bar on small screens */
+.buybar {
+  position: fixed;
+  z-index: var(--z-sheet);
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: none;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 0.75rem var(--gutter) calc(0.75rem + env(safe-area-inset-block-end));
+  background: oklch(from var(--surface) l a b / 96%);
+  backdrop-filter: blur(12px);
+  border-block-start: 1px solid var(--rule);
+  box-shadow: var(--e-2);
+  animation: buybar-in var(--t-3) var(--ease-out);
+}
+@supports not (background: oklch(from red l a b)) { .buybar { background: var(--surface); } }
+@keyframes buybar-in { from { transform: translateY(100%); } }
+.buybar__price { display: grid; gap: 0.125rem; }
+.buybar__cta { margin-inline-start: auto; }
+@media (max-width: 900px) {
+  .pdp__media { position: static; }
+  .buybar:not([hidden]) { display: flex; }
+  .pdp { padding-block-end: 7.5rem; }
+}
+
+@media (max-width: 900px) {
+  .pdp { grid-template-columns: 1fr; }
+  .pdp__frame { aspect-ratio: 1; }
+  .pdp__info { gap: var(--s-4); }
+}
+
+/* Image-less products keep the ledger look with a monogram tile. */
+.imgtile {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(135deg, transparent 0 0.5rem, oklch(0.235 0.016 255 / 4%) 0.5rem 0.5625rem),
+    var(--sunk);
+  color: var(--faint);
+  font: 700 clamp(2rem, 8vw, 3.5rem)/1 var(--font-display);
+  letter-spacing: -0.04em;
+}
+.imgtile small { display: block; margin-block-start: 0.5rem; font: 500 var(--t-meta)/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }

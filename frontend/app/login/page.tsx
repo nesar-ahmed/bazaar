@@ -1,37 +1,27 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { AuthForm } from "@/app/components/auth-form";
+import { noticeFromCode, safeNextTarget } from "@/app/components/member/notices";
 
-import AuthForm from "@/app/components/auth-form";
-import SiteHeader from "@/app/components/site-header";
-import { getCurrentProfile } from "@/lib/auth";
+export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Sign in | Bazaar",
+  title: "Sign in",
+  description:
+    "Sign in to keep your bag across devices and read the ledger of orders filed against your Bazaar account.",
 };
 
-export default async function LoginPage() {
-  if (await getCurrentProfile()) redirect("/account");
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const nextTarget = safeNextTarget(params.next);
+  const notice = noticeFromCode(params.notice);
 
   return (
-    <>
-      <SiteHeader />
-      <main className="auth-page">
-        <div className="auth-art">
-          <span className="auth-art-sun" />
-          <span className="auth-art-vase" />
-          <span className="auth-art-stem" />
-          <p>GOOD THINGS<br />ARE WAITING.</p>
-          <span className="auth-art-caption">A BAZAAR MOMENT · Nº 01</span>
-        </div>
-        <section className="auth-content">
-          <Link className="back-link" href="/">← Back to the market</Link>
-          <p className="eyebrow">WELCOME BACK</p>
-          <h1>Come on <em>in.</em></h1>
-          <p className="auth-intro">Sign in to find your favorites and make yourself at home.</p>
-          <AuthForm mode="login" />
-          <p className="auth-privacy">Your details stay yours. Always.</p>
-        </section>
-      </main>
-    </>
+    <div className="auth">
+      <section className="auth__main" aria-labelledby="auth-title">
+        <h1 className="auth__title" id="auth-title">Sign in</h1>
+        <AuthForm mode="login" nextTarget={nextTarget} notice={notice} />
+      </section>
+    </div>
   );
 }

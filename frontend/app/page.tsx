@@ -1,153 +1,123 @@
 import Link from "next/link";
 
-import SiteFooter from "@/app/components/site-footer";
-import SiteHeader from "@/app/components/site-header";
+import { ButtonLink } from "@/app/components/ui/button";
+import { Icon } from "@/app/components/ui/icons";
 
-type Product = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  price_cents: number;
-  image_url: string | null;
-  category_id: number | null;
+export const metadata = {
+  title: "A considered market for everyday living",
+  description:
+    "Welcome to Bazaar, a thoughtful online market for the things that make everyday living feel more your own.",
 };
 
-async function getProducts(): Promise<Product[]> {
-  const apiUrl = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
-  const response = await fetch(`${apiUrl}/api/products`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Catalog API returned ${response.status}`);
-  }
-  return response.json();
-}
+const notes = [
+  {
+    number: "01",
+    title: "Take your time",
+    description: "A calm place to explore, discover, and find something that feels right.",
+  },
+  {
+    number: "02",
+    title: "Find your way",
+    description: "Browse the collection or use search and categories to make it yours.",
+  },
+  {
+    number: "03",
+    title: "Make it personal",
+    description: "Create an account to keep your bag and orders together in one place.",
+  },
+];
 
-function formatPrice(priceCents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(priceCents / 100);
-}
-
-export default async function Home() {
-  let products: Product[] = [];
-  let apiUnavailable = false;
-
-  try {
-    products = await getProducts();
-  } catch {
-    apiUnavailable = true;
-  }
-
+export default function HomePage() {
   return (
     <>
-      <SiteHeader />
-      <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <p className="eyebrow">A THOUGHTFUL LITTLE MARKETPLACE</p>
-            <h1>Find the good<br />in <em>everyday.</em></h1>
-            <p className="hero-description">
-              Considered pieces, useful things, and small joys for the spaces
-              and moments you call your own.
-            </p>
-            <Link className="button button-dark hero-button" href="#collection">
-              Explore the collection <span aria-hidden="true">↗</span>
-            </Link>
-            <div className="hero-note">
-              <span className="note-star" aria-hidden="true">✳</span>
-              <span>Good things, found slowly.</span>
-            </div>
-          </div>
-          <div className="hero-art" role="img" aria-label="Abstract still life in warm, earthy colors">
-            <div className="art-sun" />
-            <div className="art-vase art-vase-large"><span /></div>
-            <div className="art-vase art-vase-small"><span /></div>
-            <div className="art-stem stem-one" />
-            <div className="art-stem stem-two" />
-            <div className="art-table" />
-            <span className="art-label">THE EVERYDAY EDIT <b>—</b> Nº 01</span>
-          </div>
-          <span className="hero-index">01 <i /> 03</span>
-        </section>
-
-        <section className="promise-strip" aria-label="Our values">
-          <p><span>✳</span> Thoughtfully selected</p>
-          <i />
-          <p><span>✳</span> Made for everyday living</p>
-          <i />
-          <p><span>✳</span> A little joy in every parcel</p>
-        </section>
-
-        <section className="collection section-wrap" id="collection">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">A FEW OF OUR FAVORITES</p>
-              <h2>Meet your next <em>favorite.</em></h2>
-            </div>
-            <span className="result-count">
-              {products.length > 0
-                ? `${products.length.toString().padStart(2, "0")} FINDS`
-                : "THE FIRST EDIT"}
-            </span>
-          </div>
-
-          {apiUnavailable ? (
-            <div className="catalog-empty">
-              <span className="empty-flower" aria-hidden="true">✳</span>
-              <div>
-                <h3>We’re setting the shelves.</h3>
-                <p>Our first collection is on its way. Come back soon for something good.</p>
-              </div>
-              <span className="empty-note">COMING SOON</span>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="catalog-empty">
-              <span className="empty-flower" aria-hidden="true">✳</span>
-              <div>
-                <h3>The shelves are ready.</h3>
-                <p>Our first collection is on its way. Come back soon for something good.</p>
-              </div>
-              <span className="empty-note">COMING SOON</span>
-            </div>
-          ) : (
-            <div className="product-grid">
-              {products.map((product) => (
-                <article className="product-card" key={product.id}>
-                  <div className="product-image">
-                    {product.image_url ? (
-                      // External catalog images are supplied by the API.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={product.image_url} alt={product.name} />
-                    ) : (
-                      <span>{product.name.slice(0, 1)}</span>
-                    )}
-                    <button type="button" aria-label={`Add ${product.name} to bag`} disabled>+</button>
-                  </div>
-                  <div className="product-info">
-                    <h3>{product.name}</h3>
-                    <span>{formatPrice(product.price_cents)}</span>
-                  </div>
-                  {product.description && <p className="product-description">{product.description}</p>}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="newsletter-band">
-          <span className="newsletter-mark" aria-hidden="true">b.</span>
+      <section className="hero landing-hero" aria-labelledby="hero-title">
+        <div className="hero__copy">
           <div>
-            <p className="eyebrow">A NOTE FROM THE MARKET</p>
-            <h2>Good things are <em>growing.</em></h2>
-            <p>We’re curating our first collection. The best finds are worth the wait.</p>
+            <p className="hero__eyebrow label label--signal">A THOUGHTFUL PLACE TO BEGIN</p>
+            <h1 id="hero-title">
+              Everyday, made a little more <em>beautiful.</em>
+            </h1>
+            <p className="hero__lede">
+              Welcome to Bazaar. Explore at your own pace and find the things
+              that make a place, a routine, or a moment feel like yours.
+            </p>
+            <div className="hero__actions">
+              <ButtonLink href="/discover" variant="cta" size="lg">
+                Explore Bazaar
+                <Icon.ArrowRight size={18} />
+              </ButtonLink>
+              <ButtonLink href="#our-approach" variant="outline" size="lg">
+                Get to know us
+              </ButtonLink>
+            </div>
           </div>
-          <Link className="text-link" href="/register">
-            Be first to know <span aria-hidden="true">↗</span>
+          <p className="landing-note">A considered market for the everyday.</p>
+        </div>
+
+        <div className="hero__stage landing-stage" aria-hidden="true">
+          <div className="landing-stage__orbit landing-stage__orbit--outer" />
+          <div className="landing-stage__orbit landing-stage__orbit--inner" />
+          <div className="landing-stage__center">
+            <span className="landing-stage__wordmark">bazaar<span>.</span></span>
+            <span className="landing-stage__rule" />
+            <p>Find your own<br />kind of lovely.</p>
+          </div>
+          <span className="landing-stage__caption">A MARKET FOR EVERYDAY LIVING</span>
+          <span className="landing-stage__index">EST. WITH CARE</span>
+        </div>
+      </section>
+
+      <section
+        className="container section landing-intro"
+        id="our-approach"
+        aria-labelledby="intro-title"
+      >
+        <div className="showcase__head">
+          <div>
+            <p className="label">The Bazaar feeling</p>
+            <h2 id="intro-title">A little room to discover.</h2>
+            <p>
+              Thoughtful browsing, an easy path around, and space to find what
+              feels right for you.
+            </p>
+          </div>
+          <Link className="link-arrow" href="/discover">
+            Discover the collection
+            <Icon.ArrowUpRight size={16} />
           </Link>
-        </section>
-      </main>
-      <SiteFooter />
+        </div>
+
+        <div className="promise">
+          {notes.map((note) => (
+            <article className="promise__item" key={note.number}>
+              <p className="label">{note.number}</p>
+              <h3>{note.title}</h3>
+              <p>{note.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="container section">
+        <div className="join">
+          <div>
+            <p className="label" style={{ color: "var(--signal)" }}>Make yourself at home</p>
+            <h2>A good place to come back to.</h2>
+            <p>
+              Start exploring, or create an account to keep your Bazaar experience
+              close at hand.
+            </p>
+          </div>
+          <div className="join__actions">
+            <ButtonLink href="/discover" variant="signal" size="lg">
+              Start exploring
+            </ButtonLink>
+            <ButtonLink href="/register" variant="ghost-light" size="lg">
+              Create an account
+            </ButtonLink>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

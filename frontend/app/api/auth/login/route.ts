@@ -1,37 +1,33 @@
 import { NextResponse } from "next/server";
 
-import { ACCESS_TOKEN_COOKIE, getApiUrl } from "@/lib/auth";
+import type { TokenPair } from "@/lib/api-types";
+import { getApiUrl } from "@/lib/auth";
 import { backendErrorMessage, isSameOriginRequest } from "@/lib/auth-response";
-
-type LoginInput = {
-  email: string;
-  password: string;
-};
-
-type TokenResponse = {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-};
+import { applySessionCookies, fetchRole } from "@/lib/session-cookies";
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
   }
 
-  let input: LoginInput;
+  let input: { email?: string; password?: string };
   try {
-    input = (await request.json()) as LoginInput;
+    input = (await request.json()) as { email?: string; password?: string };
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
   try {
+    const cartToken = request.headers.get("x-cart-token");
     const login = await fetch(`${getApiUrl()}/api/v1/users/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      headers: {
+        "Content-Type": "application/json",
+        ...(cartToken ? { "X-Cart-Token": cartToken } : {}),
+      },
+      body: JSON.stringify({ email: input.email, password: input.password }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     if (!login.ok) {
       return NextResponse.json(
@@ -40,15 +36,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const token = (await login.json()) as TokenResponse;
-    const response = NextResponse.json({ ok: true });
-    response.cookies.set(ACCESS_TOKEN_COOKIE, token.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: token.expires_in,
+    const tokens = (await login.json()) as TokenPair;
+    const role = await fetchRole(tokens.access_token);
+    const response = NextResponse.json({
+      ok: true,
+      role,
+      cart_merge_warnings: tokens.cart_merge_warnings,
     });
+    applySessionCookies(response, tokens, role);
     return response;
   } catch {
     return NextResponse.json(

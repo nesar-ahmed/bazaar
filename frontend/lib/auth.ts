@@ -1,36 +1,44 @@
-import { cookies } from "next/headers";
-
 export const ACCESS_TOKEN_COOKIE = "bazaar_access_token";
-
-export type UserProfile = {
-  id: number;
-  email: string;
-  full_name: string;
-  is_active: boolean;
-  created_at: string;
-};
+export const REFRESH_TOKEN_COOKIE = "bazaar_refresh_token";
+/** Read-only hint used by middleware to gate the admin shell. The backend is
+ *  always the authority: every admin screen re-verifies the role server-side. */
+export const ROLE_COOKIE = "bazaar_role";
+export const SIGN_IN_ROUTE = "/login";
+export const SIGN_IN_FIELD = "next";
 
 export function getApiUrl(): string {
   return (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 }
 
-export async function getAccessToken(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+export function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge,
+  };
 }
 
-export async function getCurrentProfile(): Promise<UserProfile | null> {
-  const token = await getAccessToken();
-  if (!token) return null;
+/** Only `/login`'s own origin-relative paths survive, so `?next=` cannot
+ *  become an open redirect. */
+export function safeRedirectTarget(value: string | null | undefined): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+    return null;
+  }
 
   try {
-    const response = await fetch(`${getApiUrl()}/api/v1/users/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as UserProfile;
+    const target = new URL(value, "https://bazaar.invalid");
+    if (target.origin !== "https://bazaar.invalid") return null;
+    return `${target.pathname}${target.search}${target.hash}`;
   } catch {
     return null;
   }
+}
+
+export function signInUrl(next?: string | null): string {
+  const target = safeRedirectTarget(next);
+  return target
+    ? `${SIGN_IN_ROUTE}?${SIGN_IN_FIELD}=${encodeURIComponent(target)}`
+    : SIGN_IN_ROUTE;
 }
