@@ -4,14 +4,15 @@ from fastapi import FastAPI
 
 from app.api.router import api_router
 from app.core.config import settings
-from app.db.base import Base
-from app.db.session import engine
+from app.db.session import SessionLocal
+from app.users.service import bootstrap_admin
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     settings.validate()
-    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as database:
+        bootstrap_admin(database)
     yield
 
 

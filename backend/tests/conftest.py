@@ -7,6 +7,7 @@ from sqlalchemy.pool import StaticPool
 from app import main as main_module
 from app.core.config import settings
 from app.db.base import Base
+from app.db import session as database_session
 from app.db.session import get_db
 from app.main import app
 
@@ -23,7 +24,8 @@ def client(monkeypatch):
         poolclass=StaticPool,
     )
     test_session = sessionmaker(bind=test_engine, autoflush=False, autocommit=False)
-    monkeypatch.setattr(main_module, "engine", test_engine)
+    monkeypatch.setattr(main_module, "SessionLocal", test_session)
+    monkeypatch.setattr(database_session, "SessionLocal", test_session)
 
     def override_get_db():
         database = test_session()

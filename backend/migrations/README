@@ -1,0 +1,22 @@
+## Bazaar database migrations
+
+Run Alembic commands from `backend/`. The migration environment reads
+`DATABASE_URL` and the other backend settings using the same configuration as
+the application; if unset, the database defaults to `backend/bazaar.db`.
+
+Apply all pending migrations before starting the API:
+
+```bash
+uv run alembic upgrade head
+```
+
+Create a revision after changing SQLAlchemy models:
+
+```bash
+uv run alembic revision --autogenerate -m "describe the schema change"
+```
+
+Review generated revisions before applying them. The initial commerce
+migration also adds the `customer` role to existing user rows while preserving
+their accounts. Do not edit an already-applied migration; create a new revision
+instead.
